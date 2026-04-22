@@ -1,0 +1,42 @@
+[package]
+name = "example-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tars-core = { workspace = true }
+tars-orm = { workspace = true }
+tars-validation = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+sqlx = { workspace = true }
+chrono = { workspace = true }
+dotenvy = { workspace = true }
+
+[lib]
+name = "example_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "server"
+path = "bootstrap/server.rs"
+
+[[bin]]
+name = "migrate"
+path = "bootstrap/migrate.rs"
+
+[[bin]]
+name = "seed"
+path = "bootstrap/seed.rs"
+
+[[test]]
+name = "users_feature"
+path = "tests/Feature/users_test.rs"
+
+[[test]]
+name = "validation_unit"
+path = "tests/Unit/validation_test.rs"
