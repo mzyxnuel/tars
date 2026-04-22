@@ -1,0 +1,7 @@
+default = "sqlite"
+
+[sqlite]
+url = "sqlite://storage/app/database.sqlite"
+
+[postgres]
+url = "postgres://postgres:postgres@localhost:5432/tars"
