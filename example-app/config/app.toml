@@ -1,0 +1,4 @@
+name = "TARS Example App"
+url = "http://localhost:8000"
+env = "local"
+debug = true
