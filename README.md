@@ -50,7 +50,8 @@ example-app/frontend/ Frontend binary that talks JSON to the backend
 
 - Optional — the backend has no dependency on `tars-frontend` / `tars-ui`
 - Cross-compiles to **web / desktop / mobile** (anything Dioxus targets)
-- Vue-inspired: `defineComponent`, `ref_()`, `reactive()`, `use_field()`
+- Hooks: `use_signal()` (re-exported from Dioxus), `use_field()`,
+  `use_validation_errors()`, `use_route_params()`, `use_router_path()`
 - `<Link to="/users">…</Link>` for client-side navigation
 - `use_router_path()`, `use_route_params()`, `navigate("/users")`
 - File-based routing — drop a file in `resources/routes/`:

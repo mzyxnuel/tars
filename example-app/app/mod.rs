@@ -1,2 +1,2 @@
-pub mod Http;
-pub mod Providers;
+pub mod http;
+pub mod providers;

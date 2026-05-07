@@ -2,8 +2,8 @@ use tars_core::prelude::*;
 use tars_orm::Model;
 use tars_validation::FormRequest;
 
-use crate::app::Http::Requests::{StoreUserRequest, UpdateUserRequest};
-use crate::app::Http::Resources::UserResource;
+use crate::app::http::requests::{StoreUserRequest, UpdateUserRequest};
+use crate::app::http::resources::UserResource;
 use crate::models::User;
 
 /// Users resource controller. Implements the seven Laravel resource

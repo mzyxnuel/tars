@@ -1,29 +1,29 @@
-//! Vue-inspired component primitive.
+//! Component primitives.
 //!
-//! `Component` is a trait implemented by component structs. Under the hood
-//! it's just a Dioxus component function, but the struct-based API keeps
-//! things familiar for developers coming from Vue's Options/Composition API.
+//! `Component` is a marker trait implemented by component structs that
+//! prefer a typed-Props style. Most apps will write Dioxus `#[component]`
+//! functions directly — this trait is provided for the cases where a
+//! struct-shaped surface reads better.
 
 use dioxus::prelude::*;
 
-/// Marker trait — every TARS component implements this.
+/// Marker trait — implement on a struct that knows how to render itself.
 pub trait Component {
     type Props: ComponentProps;
 
-    /// Equivalent of Vue's `setup()` / render function. Returns a Dioxus
-    /// `Element`.
+    /// Render this component with the given props.
     fn render(props: Self::Props) -> Element;
 }
 
-/// Props trait — `()` is acceptable for components that take nothing.
+/// Props trait — `()` works for components that take nothing.
 pub trait ComponentProps: Clone + PartialEq + 'static {}
 
 impl ComponentProps for () {}
 
-/// Helper matching Vue's `defineComponent({ name, setup })` DX. Wraps a
-/// plain render function into a zero-sized component type.
-#[allow(non_snake_case)]
-pub fn defineComponent<F>(f: F) -> F
+/// Define a zero-arg render function as a component without ceremony.
+/// Equivalent to writing the function directly; kept for symmetry with
+/// the rest of the API.
+pub fn define_component<F>(f: F) -> F
 where
     F: Fn() -> Element,
 {
