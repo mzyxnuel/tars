@@ -7,6 +7,7 @@
 pub mod app;
 pub mod config;
 pub mod controller;
+pub mod cors;
 pub mod error;
 pub mod middleware;
 pub mod request;
@@ -17,6 +18,7 @@ pub mod server;
 pub use app::Application;
 pub use config::Config;
 pub use controller::Controller;
+pub use cors::Cors;
 pub use error::{Error, Result};
 pub use middleware::Middleware;
 pub use request::Request;

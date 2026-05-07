@@ -196,6 +196,16 @@ impl Router {
         self.routes.extend(sub.routes);
         self.named.extend(sub.named);
     }
+
+    /// Apply a middleware to every route currently registered, plus any
+    /// future routes added through `group`. Equivalent to Laravel's
+    /// `app('router')->aliasMiddleware` + global stack.
+    pub fn apply_global(&mut self, mw: std::sync::Arc<dyn Middleware>) {
+        for route in &mut self.routes {
+            route.middleware.insert(0, mw.clone());
+        }
+        self.group_middleware.insert(0, mw);
+    }
 }
 
 /// Build the final middleware-wrapped handler for a route. Applies middleware

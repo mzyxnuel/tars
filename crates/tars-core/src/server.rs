@@ -1,9 +1,9 @@
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::Request as AxumRequest;
-use axum::routing::{delete, get, patch, post, put};
+use axum::routing::{delete, get, options, patch, post, put};
 use axum::Router as AxumRouter;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::error::{Error, Result};
@@ -38,6 +38,10 @@ impl Server {
         let mut route_map: HashMap<(Method, String), HandlerEntry> = HashMap::new();
         let mut axum_router: AxumRouter<ServerState> = AxumRouter::new();
 
+        // Track unique paths so we can auto-register OPTIONS handlers for
+        // CORS preflights below.
+        let mut paths_with_method: HashMap<String, HashSet<Method>> = HashMap::new();
+
         for route in &self.router.routes {
             let stacked = build_stack(route);
             let entry = HandlerEntry {
@@ -45,20 +49,10 @@ impl Server {
                 path_template: route.path.clone(),
             };
             route_map.insert((route.method, route.path.clone()), entry);
+            paths_with_method.entry(route.path.clone()).or_default().insert(route.method);
 
-            // Convert `:param` → `{param}` for axum 0.7
-            let axum_path = route
-                .path
-                .split('/')
-                .map(|seg| {
-                    if let Some(p) = seg.strip_prefix(':') {
-                        format!("{{{}}}", p)
-                    } else {
-                        seg.to_string()
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("/");
+            // Axum 0.7 uses `:param` already — no transform needed.
+            let axum_path = route.path.clone();
 
             axum_router = match route.method {
                 Method::GET => axum_router.route(&axum_path, get(dispatch)),
@@ -66,8 +60,43 @@ impl Server {
                 Method::PUT => axum_router.route(&axum_path, put(dispatch)),
                 Method::PATCH => axum_router.route(&axum_path, patch(dispatch)),
                 Method::DELETE => axum_router.route(&axum_path, delete(dispatch)),
+                Method::OPTIONS => axum_router.route(&axum_path, options(dispatch)),
                 _ => axum_router.route(&axum_path, get(dispatch)),
             };
+        }
+
+        // Auto-register OPTIONS handlers at every path that doesn't already
+        // have one. The dispatcher will run any global middleware (CORS)
+        // and short-circuit with 204; if no CORS middleware is registered,
+        // we still answer the preflight with a vanilla 204.
+        for (path, methods) in &paths_with_method {
+            if !methods.contains(&Method::OPTIONS) {
+                let preflight: crate::route::Handler = Arc::new(|_req| {
+                    Box::pin(async { Ok(Response::no_content()) })
+                });
+                // Find any existing route at this path so we can mirror its
+                // middleware stack (so CORS still runs).
+                let middleware = self
+                    .router
+                    .routes
+                    .iter()
+                    .find(|r| &r.path == path)
+                    .map(|r| r.middleware.clone())
+                    .unwrap_or_default();
+                let synthetic = crate::route::Route {
+                    method: Method::OPTIONS,
+                    path: path.clone(),
+                    name: None,
+                    middleware,
+                    handler: preflight,
+                };
+                let stacked = build_stack(&synthetic);
+                route_map.insert(
+                    (Method::OPTIONS, path.clone()),
+                    HandlerEntry { handler: stacked, path_template: path.clone() },
+                );
+                axum_router = axum_router.route(path, options(dispatch));
+            }
         }
 
         let state = ServerState {
