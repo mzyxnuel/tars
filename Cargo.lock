@@ -1670,7 +1670,7 @@ dependencies = [
 
 [[package]]
 name = "example-app"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1687,12 +1687,13 @@ dependencies = [
 
 [[package]]
 name = "example-app-frontend"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "dioxus",
  "serde",
  "serde_json",
  "tars-frontend",
+ "tars-ui",
 ]
 
 [[package]]
@@ -4977,7 +4978,7 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tars-cli"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -4989,7 +4990,7 @@ dependencies = [
 
 [[package]]
 name = "tars-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5012,7 +5013,7 @@ dependencies = [
 
 [[package]]
 name = "tars-frontend"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "dioxus",
  "dioxus-router",
@@ -5025,7 +5026,7 @@ dependencies = [
 
 [[package]]
 name = "tars-orm"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5041,8 +5042,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tars-ui"
+version = "1.0.0"
+dependencies = [
+ "dioxus",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "tars-validation"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "async-trait",
  "regex",

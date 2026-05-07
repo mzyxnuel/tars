@@ -46,13 +46,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tars-core = "0.1"
-tars-orm = "0.1"
-tars-validation = "0.1"
+tars-core = "1"
+tars-orm = "1"
+tars-validation = "1"
 tokio = {{ version = "1", features = ["full"] }}
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
 async-trait = "0.1"
+sqlx = {{ version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"] }}
+chrono = {{ version = "0.4", features = ["serde"] }}
+dotenvy = "0.15"
+anyhow = "1"
 
 [[bin]]
 name = "server"

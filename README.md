@@ -1,14 +1,15 @@
-# TARS
+# TARS — Laravel-in-Rust
 
-A Laravel-inspired web framework for Rust. MVP.
+A Laravel-inspired full-stack web framework for Rust. v1.
 
-TARS brings Laravel's developer experience — controllers, migrations,
-seeders, factories, form requests, resources, configs — to Rust. The HTTP
-layer wraps `axum`, the data layer wraps `sqlx`, and the optional frontend
-wraps `dioxus` (cross-compiles to web, desktop, and mobile).
+TARS gives you Laravel's developer experience — controllers, migrations,
+seeders, factories, form requests, resources, configs — but in Rust. The
+HTTP layer wraps `axum`, the data layer wraps `sqlx`, the optional frontend
+wraps `dioxus` (cross-compiles to web, desktop, and mobile), and the
+component library `tars-ui` ships pre-styled Dioxus components.
 
-- **JSON first.** Frontend and backend always talk JSON.
-- **Laravel 13 directory tree**, with a couple of tweaks:
+- **JSON-first.** Frontend and backend always talk JSON.
+- **Laravel 13 directory tree**, with two tweaks:
   - `/app` — controllers, middleware, requests, resources, providers
     *(no `app/Models` — see below)*
   - `/models` — all models, shared between frontend and backend
@@ -19,54 +20,79 @@ wraps `dioxus` (cross-compiles to web, desktop, and mobile).
 
 ```
 crates/
-├── tars-core         HTTP, routing, request/response, config
+├── tars-core         HTTP, routing, request/response, config, CORS
 ├── tars-orm          Models, QueryBuilder, migrations, seeders, factories, resources
-├── tars-validation   Validation rules, FormRequest
-├── tars-cli          `tars` binary — artisan-like codegen + scaffold
-└── tars-frontend     Dioxus wrapper with Vue-inspired DX + file-based routing
+├── tars-validation   Validation rules + FormRequest
+├── tars-ui           Dioxus component library (Button, Input, Card, Table, …)
+├── tars-frontend     Dioxus wrapper with Vue-inspired DX + file-based routing
+└── tars-cli          `tars` binary — artisan-like codegen + scaffold
 
 example-app/          Full example with Laravel 13 directory tree
+example-app/frontend/ Frontend binary that talks JSON to the backend
 ```
 
 ## Backend features
 
-- Application + Router + Controller + Middleware
-- Request with `input`, `only`, `except`, `has`, `route`, `json` helpers
-- Response with `json`, `created`, `no_content` helpers
-- Resource routing (`router.resource("/users", UserController)`)
-- Route grouping with prefix + middleware
-- Configuration via `config/*.toml` files and `config("app.name")` helper
+- `Application` + `Router` (groups, resource routes, global middleware)
+- `Controller` + `Middleware` traits, async-trait based
+- `Request` with `input`, `only`, `except`, `has`, `route`, `json` helpers
+- `Response` with `json`, `created`, `no_content` helpers
+- `config("app.name")` from `config/*.toml` files
 - Models with `all`, `find`, `create`, `delete` + chainable `QueryBuilder`
-- Migrations with a fluent `Schema::create("users").id().string("name")...`
+- Migrations with fluent `Schema::create("users").id().string("name")`…
 - Factories + Seeders
-- Form requests: `StoreUserRequest::validated(&req).await?`
-- Model resources: `UserResource::from_user(user).to_json()`
+- Form requests (`StoreUserRequest::validated(&req).await?`) — Laravel
+  rule strings: `"required|email|max:255"`
+- Model resources (`UserResource::from_user(user).to_json()`)
+- Built-in `Cors` middleware + auto OPTIONS preflight at every route
 
 ## Frontend features
 
-- Optional — the backend has no dependency on `tars-frontend`
-- Dioxus wrapper, so any Dioxus target works (web / desktop / mobile)
-- Vue-inspired: `defineComponent`, `ref_()`, `reactive()`
+- Optional — the backend has no dependency on `tars-frontend` / `tars-ui`
+- Cross-compiles to **web / desktop / mobile** (anything Dioxus targets)
+- Vue-inspired: `defineComponent`, `ref_()`, `reactive()`, `use_field()`
 - `<Link to="/users">…</Link>` for client-side navigation
-- `use_router_path()` hook for reactive route tracking
-- `navigate("/users")` for imperative routing
-- File-based routing (`resources/routes/users.rs` → `/users`,
-  `resources/routes/users/[id].rs` → `/users/:id`) — discovered at build
-  time by `build.rs` (no manual route registration)
-- `Api::new("/api")` JSON client (uses `gloo-net` on the web target)
-- Shared model types via `/models`
+- `use_router_path()`, `use_route_params()`, `navigate("/users")`
+- File-based routing — drop a file in `resources/routes/`:
+  - `index.rs` → `/`
+  - `users.rs` → `/users`
+  - `users/[id].rs` → `/users/:id`
+  - `users/[id]/edit.rs` → `/users/:id/edit`
+- `Api::default_base()` JSON client (gloo-net on web)
+- `tars-ui` components (Button, Input, Card, Table, Alert, Form, …)
+  with a single bundled stylesheet (`tars_ui::STYLES`)
+- Reactive validation error map: `use_validation_errors()`
 
-### Running the frontend
+## Running the example app
 
-The example app ships a frontend crate at `example-app/frontend/`:
+Backend (terminal A):
 
 ```bash
-# desktop target (requires gtk/webkit dev libraries)
-cargo run -p example-app-frontend --features desktop
-
-# web target — use `dx serve` from the dioxus CLI
-cd example-app/frontend && dx serve --features web
+cd example-app
+cargo run --bin server
+# 🚀 listens on 0.0.0.0:8000
+# Migrations are auto-run on boot. SQLite file lives at storage/app/database.sqlite
 ```
+
+Frontend (terminal B):
+
+```bash
+# Web (needs the dioxus CLI: `cargo install dioxus-cli`)
+cd example-app/frontend
+dx serve --features web
+
+# Desktop (needs gtk + webkit2gtk dev libs on Linux)
+cargo run -p example-app-frontend --features desktop
+```
+
+You'll see:
+- `/` — landing page with cards
+- `/users` — list of users with view / edit / delete actions
+- `/users/create` — create form (with field-level validation errors)
+- `/users/:id` — show page
+- `/users/:id/edit` — edit form
+
+All five pages use `tars-ui` components and talk to the backend over JSON.
 
 ## CLI (artisan-like)
 
@@ -84,13 +110,12 @@ tars migrate                    # cargo run --bin migrate
 tars db:seed                    # cargo run --bin seed
 ```
 
-## Getting started
+## Tests
 
 ```bash
-cargo build --workspace
-cd example-app
-cargo test --test validation_unit
-cargo test --test users_feature
+cargo test --workspace
 ```
 
-The example app shows every scaffolding piece working end-to-end.
+## License
+
+MIT.
