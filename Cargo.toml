@@ -6,12 +6,13 @@ members = [
     "crates/tars-validation",
     "crates/tars-cli",
     "crates/tars-frontend",
+    "crates/tars-ui",
     "example-app",
     "example-app/frontend",
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["TARS Framework"]
 license = "MIT"
@@ -24,6 +25,7 @@ tars-validation = { path = "crates/tars-validation" }
 tars-macros = { path = "crates/tars-macros" }
 tars-cli = { path = "crates/tars-cli" }
 tars-frontend = { path = "crates/tars-frontend" }
+tars-ui = { path = "crates/tars-ui" }
 
 # Runtime & HTTP
 tokio = { version = "1.40", features = ["full"] }
