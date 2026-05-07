@@ -7,6 +7,7 @@ members = [
     "crates/tars-cli",
     "crates/tars-frontend",
     "example-app",
+    "example-app/frontend",
 ]
 
 [workspace.package]

@@ -47,8 +47,26 @@ example-app/          Full example with Laravel 13 directory tree
 - Optional — the backend has no dependency on `tars-frontend`
 - Dioxus wrapper, so any Dioxus target works (web / desktop / mobile)
 - Vue-inspired: `defineComponent`, `ref_()`, `reactive()`
-- File-based routing (`resources/routes/users.rs` → `/users`)
+- `<Link to="/users">…</Link>` for client-side navigation
+- `use_router_path()` hook for reactive route tracking
+- `navigate("/users")` for imperative routing
+- File-based routing (`resources/routes/users.rs` → `/users`,
+  `resources/routes/users/[id].rs` → `/users/:id`) — discovered at build
+  time by `build.rs` (no manual route registration)
+- `Api::new("/api")` JSON client (uses `gloo-net` on the web target)
 - Shared model types via `/models`
+
+### Running the frontend
+
+The example app ships a frontend crate at `example-app/frontend/`:
+
+```bash
+# desktop target (requires gtk/webkit dev libraries)
+cargo run -p example-app-frontend --features desktop
+
+# web target — use `dx serve` from the dioxus CLI
+cd example-app/frontend && dx serve --features web
+```
 
 ## CLI (artisan-like)
 
