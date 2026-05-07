@@ -15,7 +15,7 @@ fn write(path: &Path, contents: &str) -> Result<()> {
 }
 
 pub fn make_controller(name: &str) -> Result<()> {
-    let path = format!("app/Http/Controllers/{name}.rs");
+    let path = format!("app/http/controllers/{}.rs", to_snake(name));
     let src = format!(
         r#"use tars_core::prelude::*;
 
@@ -39,8 +39,8 @@ impl Controller for {name} {{
 }
 
 pub fn make_model(name: &str) -> Result<()> {
-    let table = pluralize(&name.to_ascii_lowercase());
-    let path = format!("models/{name}.rs");
+    let table = pluralize(&to_snake(name));
+    let path = format!("models/{}.rs", to_snake(name));
     let src = format!(
         r#"use serde::{{Deserialize, Serialize}};
 use tars_orm::Model;
@@ -92,7 +92,7 @@ impl Migration for {struct_name} {{
 }
 
 pub fn make_seeder(name: &str) -> Result<()> {
-    let path = format!("database/seeders/{name}.rs");
+    let path = format!("database/seeders/{}.rs", to_snake(name));
     let src = format!(
         r#"use tars_orm::Seeder;
 use async_trait::async_trait;
@@ -113,7 +113,7 @@ impl Seeder for {name} {{
 }
 
 pub fn make_factory(name: &str) -> Result<()> {
-    let path = format!("database/factories/{name}.rs");
+    let path = format!("database/factories/{}.rs", to_snake(name));
     let src = format!(
         r#"use serde_json::json;
 use tars_orm::Factory;
@@ -135,7 +135,7 @@ impl Factory for {name} {{
 }
 
 pub fn make_request(name: &str) -> Result<()> {
-    let path = format!("app/Http/Requests/{name}.rs");
+    let path = format!("app/http/requests/{}.rs", to_snake(name));
     let src = format!(
         r#"use tars_validation::FormRequest;
 use async_trait::async_trait;
@@ -156,7 +156,7 @@ impl FormRequest for {name} {{
 }
 
 pub fn make_resource(name: &str) -> Result<()> {
-    let path = format!("app/Http/Resources/{name}.rs");
+    let path = format!("app/http/resources/{}.rs", to_snake(name));
     let src = format!(
         r#"use serde_json::{{json, Value}};
 use tars_orm::JsonResource;

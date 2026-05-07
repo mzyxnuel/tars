@@ -9,14 +9,15 @@ pub fn new_project(name: &str) -> Result<()> {
         anyhow::bail!("Directory '{name}' already exists.");
     }
 
-    // Laravel 13 directory tree (minus /app/Models — models live at /models).
+    // Laravel 13 directory tree, snake_case'd to follow Rust conventions.
+    // (No /app/models — top-level /models is shared with the frontend.)
     let dirs = [
-        "app/Console/Commands",
-        "app/Http/Controllers",
-        "app/Http/Middleware",
-        "app/Http/Requests",
-        "app/Http/Resources",
-        "app/Providers",
+        "app/console/commands",
+        "app/http/controllers",
+        "app/http/middleware",
+        "app/http/requests",
+        "app/http/resources",
+        "app/providers",
         "bootstrap",
         "config",
         "database/factories",
@@ -30,8 +31,8 @@ pub fn new_project(name: &str) -> Result<()> {
         "storage/app",
         "storage/framework",
         "storage/logs",
-        "tests/Feature",
-        "tests/Unit",
+        "tests/feature",
+        "tests/unit",
     ];
     for d in dirs {
         fs::create_dir_all(root.join(d))?;
