@@ -1,12 +1,10 @@
-//! `/users/create` — form to add a new user. Posts JSON to /api/users,
-//! handles 422 validation errors by re-rendering field-level messages,
-//! navigates to /users on success.
+//! `/users/create` — Tailwind-styled form to add a new user. Posts JSON to
+//! /api/users; 422 validation errors are rendered field-by-field.
 
 use dioxus::prelude::*;
 use serde_json::json;
 use tars_frontend::prelude::*;
 use tars_frontend::Link;
-use tars_ui::prelude::*;
 
 use crate::shared::{ApiError, ItemResponse, User};
 
@@ -48,47 +46,86 @@ pub fn component() -> Element {
     let email_err = errors.first("email");
 
     rsx! {
-        Container {
-            Page {
-                title: "Create user".to_string(),
-                actions: rsx! {
-                    Link { to: "/users".to_string(),
-                        Button { variant: ButtonVariant::Ghost, "← Back" }
-                    }
-                },
-                if let Some(err) = submit_error.read().clone() {
-                    Alert { variant: AlertVariant::Error, "{err}" }
+        section { class: "max-w-xl mx-auto",
+            div { class: "flex items-center justify-between mb-6",
+                h1 { class: "text-2xl font-bold tracking-tight", "Create user" }
+                Link { class: "text-sm text-slate-400 hover:text-slate-200".to_string(),
+                    to: "/users".to_string(), "← Back"
                 }
-                Card { CardBody {
-                    FormGroup {
-                        FormField { label: "Name".to_string(), error: name_err,
-                            Input {
-                                value: name.get(),
-                                placeholder: "Ada Lovelace".to_string(),
-                                oninput: move |v| name.set(v),
-                            }
-                        }
-                        FormField { label: "Email".to_string(), error: email_err,
-                            Input {
-                                r#type: "email".to_string(),
-                                value: email.get(),
-                                placeholder: "ada@example.com".to_string(),
-                                oninput: move |v| email.set(v),
-                            }
-                        }
-                        div { class: "tars-row", style: "margin-top: 4px;",
-                            Button {
-                                variant: ButtonVariant::Primary,
-                                disabled: *submitting.read(),
-                                onclick: on_submit,
-                                if *submitting.read() { "Saving…" } else { "Create user" }
-                            }
-                            Link { to: "/users".to_string(),
-                                Button { variant: ButtonVariant::Ghost, "Cancel" }
-                            }
-                        }
+            }
+
+            if let Some(err) = submit_error.read().clone() {
+                div { class: "mb-4 px-4 py-3 rounded-md border border-rose-500/40 bg-rose-500/10 text-rose-200 text-sm",
+                    "{err}"
+                }
+            }
+
+            form { class: "space-y-5 p-6 rounded-xl border border-slate-800 bg-slate-900/40",
+                Field {
+                    label: "Name",
+                    placeholder: "Ada Lovelace",
+                    value: name.get(),
+                    error: name_err,
+                    on_input: EventHandler::new(move |v: String| name.set(v)),
+                }
+                Field {
+                    label: "Email",
+                    input_type: "email",
+                    placeholder: "ada@example.com",
+                    value: email.get(),
+                    error: email_err,
+                    on_input: EventHandler::new(move |v: String| email.set(v)),
+                }
+                div { class: "flex gap-3 pt-2",
+                    button {
+                        r#type: "button",
+                        class: "px-5 py-2 rounded-md bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition",
+                        disabled: *submitting.read(),
+                        onclick: on_submit,
+                        if *submitting.read() { "Saving…" } else { "Create user" }
                     }
-                } }
+                    Link { class: "px-5 py-2 rounded-md border border-slate-700 hover:border-slate-500 text-slate-200 font-medium text-sm transition".to_string(),
+                        to: "/users".to_string(), "Cancel"
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+struct FieldProps {
+    label: &'static str,
+    #[props(default = "text")]
+    input_type: &'static str,
+    #[props(default = "")]
+    placeholder: &'static str,
+    value: String,
+    error: Option<String>,
+    on_input: EventHandler<String>,
+}
+
+#[component]
+fn Field(props: FieldProps) -> Element {
+    let border = if props.error.is_some() {
+        "border-rose-500/60 focus:border-rose-400 focus:ring-rose-400/30"
+    } else {
+        "border-slate-700 focus:border-indigo-400 focus:ring-indigo-400/30"
+    };
+    rsx! {
+        label { class: "block",
+            span { class: "block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5",
+                "{props.label}"
+            }
+            input {
+                r#type: "{props.input_type}",
+                placeholder: "{props.placeholder}",
+                value: "{props.value}",
+                class: "w-full px-3 py-2 rounded-md bg-slate-950/60 text-slate-100 placeholder-slate-500 border {border} focus:outline-none focus:ring-4 transition",
+                oninput: move |evt| props.on_input.call(evt.value()),
+            }
+            if let Some(err) = props.error.clone() {
+                span { class: "block mt-1.5 text-xs text-rose-300", "{err}" }
             }
         }
     }

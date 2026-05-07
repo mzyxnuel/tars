@@ -4,7 +4,9 @@ use axum::http::Request as AxumRequest;
 use axum::routing::{delete, get, options, patch, post, put};
 use axum::Router as AxumRouter;
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use std::sync::Arc;
+use tower_http::services::{ServeDir, ServeFile};
 
 use crate::error::{Error, Result};
 use crate::request::Request;
@@ -27,11 +29,18 @@ struct ServerState {
 pub struct Server {
     pub addr: String,
     pub router: Router,
+    pub public_dir: Option<PathBuf>,
 }
 
 impl Server {
     pub fn new(addr: impl Into<String>, router: Router) -> Self {
-        Self { addr: addr.into(), router }
+        Self { addr: addr.into(), router, public_dir: None }
+    }
+
+    /// Set a directory of static assets served as an SPA fallback.
+    pub fn with_public_dir(mut self, dir: Option<PathBuf>) -> Self {
+        self.public_dir = dir;
+        self
     }
 
     pub async fn run(self) -> Result<()> {
@@ -102,7 +111,24 @@ impl Server {
         let state = ServerState {
             routes: Arc::new(route_map),
         };
-        let axum_router = axum_router.with_state(state);
+        let mut axum_router = axum_router.with_state(state);
+
+        // SPA fallback: any unmatched request falls through to ServeDir.
+        // Missing files within ServeDir fall back to index.html so the
+        // client-side router handles deep links (e.g. /users/42).
+        if let Some(dir) = self.public_dir.as_ref() {
+            if dir.is_dir() {
+                let index = dir.join("index.html");
+                let serve_dir = ServeDir::new(dir).not_found_service(ServeFile::new(&index));
+                axum_router = axum_router.fallback_service(serve_dir);
+                tracing::info!("Serving static SPA from {}", dir.display());
+            } else {
+                tracing::warn!(
+                    "public_dir {} not found — skipping static SPA fallback",
+                    dir.display()
+                );
+            }
+        }
 
         let listener = tokio::net::TcpListener::bind(&self.addr)
             .await

@@ -1,0 +1,32 @@
+# Dioxus CLI config for the TARS example frontend.
+#
+# `dx serve --features web`         -> dev server with hot reload (port 8080)
+# `dx build --features web --release` -> production build
+#
+# When built, the static bundle (HTML/JS/CSS/WASM) is copied into
+# `../public/` so the TARS backend can serve it as the SPA fallback at
+# port 8000 in production. See `bootstrap/server.rs` for the mount point.
+
+[application]
+name = "tars-example"
+default_platform = "web"
+
+[web.app]
+title = "TARS Example"
+base_path = "/"
+
+[web.watcher]
+reload_html = true
+watch_path = ["src", "../resources/routes", "../models"]
+
+[web.resource]
+# Tailwind is injected at runtime by `document::Script` in main.rs (CDN).
+# For a production-grade Tailwind build, replace this with a path to a
+# tailwindcss-compiled CSS file (e.g. "assets/tailwind.css") and run the
+# tailwind CLI as part of your build.
+style = []
+script = []
+
+[web.resource.dev]
+style = []
+script = []

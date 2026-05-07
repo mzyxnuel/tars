@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo check *)",
+      "Bash(grep -r \"pub.*Script\\\\b\" ~/.cargo/registry/src/*/dioxus-html-0.6.3/src/ 2>/dev/null | head -10; echo --; grep -rn \"Script\\\\|Stylesheet\" ~/.cargo/registry/src/*/dioxus-core-0.6.3/src/ 2>/dev/null | head -10; echo --d; grep -rn \"pub fn Script\\\\|pub.*Script \" ~/.cargo/registry/src/*/dioxus-html-0.6.3/src/document/ 2>/dev/null | head)",
+      "Read(//c/Users/manue/.cargo/registry/src/**)"
+    ]
+  }
+}
