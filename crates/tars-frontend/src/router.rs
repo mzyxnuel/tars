@@ -1,11 +1,12 @@
 //! File-based router — inspired by TanStack Router / Nuxt's `pages/` folder.
 //!
 //! At build time the host crate's `build.rs` walks `resources/routes/**/*.rs`
-//! and emits a `ROUTES` constant of `&[Route]`. At runtime this module
-//! provides a tiny dispatcher (`FileRouter`) plus the reactive primitives
-//! that components use to read the current path and trigger navigation.
+//! and emits a `routes()` function returning `&[Route]`. At runtime this
+//! module provides a tiny dispatcher (`FileRouter`), the reactive
+//! `CURRENT_PATH` signal, and helpers for reading route parameters.
 
 use dioxus::prelude::*;
+use std::collections::HashMap;
 
 /// A single route discovered from the filesystem.
 #[derive(Clone, Copy)]
@@ -16,10 +17,15 @@ pub struct Route {
     pub component: fn() -> Element,
 }
 
-/// Global signal holding the active path. Components read it through
-/// `use_router_path`; navigation writes it via `navigate`.
+/// Active path. Components subscribe via `use_router_path`; navigation
+/// writes it via `navigate`.
 pub static CURRENT_PATH: GlobalSignal<String> =
     Signal::global(|| initial_path());
+
+/// Currently matched route pattern. Set by `FileRouter::render` when it
+/// dispatches a route. Used by `use_route_params` to extract `:param` values.
+pub static MATCHED_PATTERN: GlobalSignal<&'static str> =
+    Signal::global(|| "");
 
 fn initial_path() -> String {
     #[cfg(target_arch = "wasm32")]
@@ -33,18 +39,28 @@ fn initial_path() -> String {
     "/".to_string()
 }
 
-/// Hook giving components access to the current path. Re-renders on change.
+/// Reactive accessor — returns the current path and re-renders on change.
 pub fn use_router_path() -> String {
     CURRENT_PATH.read().clone()
 }
 
-/// Read the current path without subscribing — useful from non-component code.
+/// Read the current path without subscribing.
 pub fn current_path() -> String {
     CURRENT_PATH.peek().clone()
 }
 
-/// Imperatively navigate to `path`. Updates the reactive signal so any
-/// component reading it re-renders, and pushes browser history on web.
+/// Reactive accessor for the active route's `:param` values.
+///
+/// Inside `resources/routes/users/[id].rs` you can call
+/// `use_route_params().get("id")` to read the matched value.
+pub fn use_route_params() -> HashMap<String, String> {
+    let path = use_router_path();
+    let pattern = *MATCHED_PATTERN.read();
+    extract_params(pattern, &path).unwrap_or_default()
+}
+
+/// Imperatively navigate. Updates the reactive signal and pushes browser
+/// history on web targets.
 pub fn navigate(path: &str) {
     *CURRENT_PATH.write() = path.to_string();
     #[cfg(target_arch = "wasm32")]
@@ -74,12 +90,16 @@ impl FileRouter {
         Self { routes, not_found }
     }
 
-    /// Render the router. Reads from `CURRENT_PATH` so the component
-    /// re-renders whenever `navigate` is called.
+    /// Render the route matching the current path. Routes are matched in
+    /// declaration order; longer/more-specific patterns must come first
+    /// (the build script handles that automatically).
     pub fn render(self) -> Element {
         let path = use_router_path();
         for r in self.routes {
             if path_matches(r.path, &path) {
+                if *MATCHED_PATTERN.peek() != r.path {
+                    *MATCHED_PATTERN.write() = r.path;
+                }
                 return (r.component)();
             }
         }
@@ -87,8 +107,7 @@ impl FileRouter {
     }
 }
 
-/// Path matcher — supports literal segments and `:param`. Leaves wildcards
-/// and regex-style matches to future work.
+/// Path matcher — supports literal segments and `:param`.
 pub fn path_matches(pattern: &str, path: &str) -> bool {
     let p_segs: Vec<&str> = pattern.trim_matches('/').split('/').filter(|s| !s.is_empty()).collect();
     let a_segs: Vec<&str> = path.trim_matches('/').split('/').filter(|s| !s.is_empty()).collect();
@@ -108,13 +127,13 @@ pub fn path_matches(pattern: &str, path: &str) -> bool {
 
 /// Extract `:param` values from a matched path. Returns `None` if the
 /// pattern doesn't match.
-pub fn extract_params(pattern: &str, path: &str) -> Option<std::collections::HashMap<String, String>> {
+pub fn extract_params(pattern: &str, path: &str) -> Option<HashMap<String, String>> {
     let p_segs: Vec<&str> = pattern.trim_matches('/').split('/').filter(|s| !s.is_empty()).collect();
     let a_segs: Vec<&str> = path.trim_matches('/').split('/').filter(|s| !s.is_empty()).collect();
     if p_segs.len() != a_segs.len() {
         return None;
     }
-    let mut map = std::collections::HashMap::new();
+    let mut map = HashMap::new();
     for (p, a) in p_segs.iter().zip(a_segs.iter()) {
         if let Some(name) = p.strip_prefix(':') {
             map.insert(name.to_string(), (*a).to_string());

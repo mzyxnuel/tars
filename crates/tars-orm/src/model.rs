@@ -27,10 +27,11 @@ pub trait Model: Serialize + DeserializeOwned + Send + Sync + Sized + 'static {
         Self::query().get().await
     }
 
-    /// Fetch the first row matching `primary_key = id`.
+    /// Fetch the first row matching `primary_key = id`. The id is coerced
+    /// to a number when it parses cleanly so integer-column lookups work.
     async fn find<V: ToString + Send>(id: V) -> Result<Option<Self>, sqlx::Error> {
         Self::query()
-            .where_eq(Self::primary_key(), id.to_string())
+            .where_eq(Self::primary_key(), coerce_id(&id.to_string()))
             .first()
             .await
     }
@@ -61,12 +62,21 @@ pub trait Model: Serialize + DeserializeOwned + Send + Sync + Sized + 'static {
     /// Delete by primary key. Returns affected rows.
     async fn delete<V: ToString + Send>(id: V) -> Result<u64, sqlx::Error> {
         let sql = format!("DELETE FROM {} WHERE {} = $1", Self::table(), Self::primary_key());
-        let res: sqlx::any::AnyQueryResult = sqlx::query::<sqlx::Any>(&sql)
-            .bind(id.to_string())
-            .execute(DB::pool())
-            .await?;
+        let q = sqlx::query::<sqlx::Any>(&sql);
+        let q = bind_value(q, coerce_id(&id.to_string()));
+        let res: sqlx::any::AnyQueryResult = q.execute(DB::pool()).await?;
         Ok(res.rows_affected())
     }
+}
+
+/// Coerce a route-param-like id string into the right JSON type for a
+/// database bind. Integer-looking ids become numbers (so they match
+/// integer primary keys); everything else stays a string.
+pub fn coerce_id(id: &str) -> serde_json::Value {
+    if let Ok(n) = id.parse::<i64>() {
+        return serde_json::Value::from(n);
+    }
+    serde_json::Value::String(id.to_string())
 }
 
 /// Bind a JSON value onto a sqlx query. Keeps the model helpers database

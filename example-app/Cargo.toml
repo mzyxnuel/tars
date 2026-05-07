@@ -35,8 +35,8 @@ path = "bootstrap/seed.rs"
 
 [[test]]
 name = "users_feature"
-path = "tests/Feature/users_test.rs"
+path = "tests/feature/users_test.rs"
 
 [[test]]
 name = "validation_unit"
-path = "tests/Unit/validation_test.rs"
+path = "tests/unit/validation_test.rs"
