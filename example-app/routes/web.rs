@@ -1,14 +1,11 @@
+//! Web routes. Backend is JSON-only (`/api/*`). The root `/` and any other
+//! non-API path falls through to the static SPA bundle in `public/`, which
+//! is the Dioxus frontend built with `dx build --features web`. Add custom
+//! server-rendered HTML routes here if you want backend-rendered pages
+//! alongside the SPA.
 use tars_core::Router;
-use tars_core::Response;
-use serde_json::json;
 
-/// Web routes — returns JSON for the MVP since the framework's transport
-/// is JSON end-to-end. Frontend rendering is handled by `tars-frontend`.
-pub fn register(router: &mut Router) {
-    router.get("/", |_req| async move {
-        Ok(Response::json(json!({
-            "framework": "TARS",
-            "message": "Welcome to TARS — Laravel-in-Rust."
-        })))
-    });
+pub fn register(_router: &mut Router) {
+    // Intentionally empty — see `bootstrap/server.rs` where the SPA bundle
+    // is mounted via `Application::with_public_dir(...)`.
 }

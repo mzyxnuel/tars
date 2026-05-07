@@ -1,9 +1,8 @@
-//! `/users/:id` — show a single user.
+//! `/users/:id` — Tailwind-styled user detail page.
 
 use dioxus::prelude::*;
 use tars_frontend::prelude::*;
 use tars_frontend::Link;
-use tars_ui::prelude::*;
 
 use crate::shared::{ItemResponse, User};
 
@@ -35,46 +34,57 @@ pub fn component() -> Element {
     let edit_path = format!("/users/{id}/edit");
 
     rsx! {
-        Container {
-            Page {
-                title: "User".to_string(),
-                actions: rsx! {
-                    Link { to: "/users".to_string(),
-                        Button { variant: ButtonVariant::Ghost, "← Back" }
+        section { class: "max-w-2xl mx-auto",
+            div { class: "flex items-center justify-between mb-6",
+                h1 { class: "text-2xl font-bold tracking-tight", "User" }
+                div { class: "flex gap-2",
+                    Link { class: "px-3 py-1.5 rounded-md text-sm text-slate-300 hover:bg-slate-800 transition".to_string(),
+                        to: "/users".to_string(), "← Back"
                     }
-                    Link { to: edit_path,
-                        Button { variant: ButtonVariant::Secondary, "Edit" }
+                    Link { class: "px-3 py-1.5 rounded-md text-sm text-indigo-300 hover:bg-indigo-500/15 transition".to_string(),
+                        to: edit_path, "Edit"
                     }
-                },
-                if let Some(err) = error.read().clone() {
-                    Alert { variant: AlertVariant::Error, "{err}" }
-                } else if *loading.read() {
-                    div { class: "tars-row", Spinner {} span { class: "tars-muted", "Loading…" } }
-                } else if let Some(u) = user.read().clone() {
-                    Card { CardBody {
-                        div { class: "tars-stack",
-                            div {
-                                div { class: "tars-label", "ID" }
-                                div { "{u.id.unwrap_or(0)}" }
-                            }
-                            div {
-                                div { class: "tars-label", "Name" }
-                                div { "{u.name}" }
-                            }
-                            div {
-                                div { class: "tars-label", "Email" }
-                                div { "{u.email}" }
-                            }
-                            if let Some(ts) = u.created_at.as_ref() {
-                                div {
-                                    div { class: "tars-label", "Created" }
-                                    div { class: "tars-muted", "{ts}" }
-                                }
-                            }
-                        }
-                    } }
                 }
             }
+
+            if let Some(err) = error.read().clone() {
+                div { class: "px-4 py-3 rounded-md border border-rose-500/40 bg-rose-500/10 text-rose-200 text-sm",
+                    "{err}"
+                }
+            } else if *loading.read() {
+                div { class: "flex items-center gap-2 text-slate-400 text-sm",
+                    span { class: "inline-block w-4 h-4 border-2 border-slate-700 border-t-indigo-400 rounded-full animate-spin" }
+                    span { "Loading…" }
+                }
+            } else if let Some(u) = user.read().clone() {
+                div { class: "rounded-xl border border-slate-800 bg-slate-900/40 divide-y divide-slate-800",
+                    DetailRow { label: "ID", value: u.id.unwrap_or(0).to_string() }
+                    DetailRow { label: "Name", value: u.name.clone() }
+                    DetailRow { label: "Email", value: u.email.clone() }
+                    if let Some(ts) = u.created_at.clone() {
+                        DetailRow { label: "Created", value: ts, muted: true }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+struct DetailRowProps {
+    label: &'static str,
+    value: String,
+    #[props(default = false)]
+    muted: bool,
+}
+
+#[component]
+fn DetailRow(props: DetailRowProps) -> Element {
+    let text_cls = if props.muted { "text-slate-400 font-mono text-sm" } else { "text-slate-100" };
+    rsx! {
+        div { class: "px-5 py-4",
+            div { class: "text-xs font-medium text-slate-500 uppercase tracking-wider mb-1", "{props.label}" }
+            div { class: "{text_cls}", "{props.value}" }
         }
     }
 }

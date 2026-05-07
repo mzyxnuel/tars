@@ -26,5 +26,12 @@ async fn main() -> tars_core::Result<()> {
     routes::api::register(&mut app.router);
     app.router.apply_global(Arc::new(Cors::permissive()));
 
+    // Mount the built Dioxus bundle as the SPA fallback. Anything not
+    // matched by an /api route falls through to `public/index.html`, so
+    // browsers hitting `:8000` see the frontend instead of a JSON blob.
+    // Build the bundle with: `cd frontend && dx build --features web --release`
+    // then copy the output into `public/` (or point this at the CLI output dir).
+    let app = app.with_public_dir("public");
+
     app.serve("0.0.0.0:8000").await
 }
