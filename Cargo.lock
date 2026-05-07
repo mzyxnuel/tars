@@ -1023,6 +1023,7 @@ dependencies = [
  "dioxus-signals",
  "dioxus-web",
  "manganis",
+ "serde",
  "warnings",
 ]
 
@@ -1682,6 +1683,16 @@ dependencies = [
  "tars-orm",
  "tars-validation",
  "tokio",
+]
+
+[[package]]
+name = "example-app-frontend"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "serde",
+ "serde_json",
+ "tars-frontend",
 ]
 
 [[package]]
@@ -5005,8 +5016,11 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "dioxus-router",
+ "gloo-net",
  "serde",
  "serde_json",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
