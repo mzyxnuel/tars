@@ -1,5 +1,5 @@
-//! Entry point for the TARS frontend. Reads the build-time generated route
-//! table from `resources/routes/`, mounts a `FileRouter`, and launches the
+//! Entry point for the TARS frontend. Reads the build-time generated
+//! route table from `routes/`, mounts a `FileRouter`, and launches the
 //! Dioxus runtime selected by feature flags (web / desktop / mobile).
 //!
 //! Tailwind is loaded via the Tailwind Play CDN (a `<script>` tag injected
@@ -23,7 +23,6 @@ fn main() {
     launch(app);
 }
 
-#[allow(non_snake_case)]
 fn app() -> Element {
     let router = FileRouter::new(generated::routes(), not_found);
     rsx! {

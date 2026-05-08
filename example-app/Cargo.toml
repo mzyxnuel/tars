@@ -19,7 +19,7 @@ dotenvy = { workspace = true }
 
 [lib]
 name = "example_app"
-path = "src/lib.rs"
+path = "lib.rs"
 
 [[bin]]
 name = "server"
