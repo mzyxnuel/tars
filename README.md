@@ -27,8 +27,8 @@ crates/
 ├── tars-frontend     Dioxus wrapper with Vue-inspired DX + file-based routing
 └── tars-cli          `tars` binary — artisan-like codegen + scaffold
 
-example-app/          Full example with Laravel 13 directory tree
-example-app/frontend/ Frontend binary that talks JSON to the backend
+example-app/           Full example with Laravel 13 directory tree
+example-app/resources/ Frontend Cargo crate (Dioxus) that talks JSON to it
 ```
 
 ## Backend features
@@ -75,7 +75,7 @@ Build the frontend once, then start the backend; it serves the frontend
 bundle at `/` and the JSON API at `/api/*` on the same port.
 
 ```bash
-cd example-app/frontend
+cd example-app/resources
 dx build --features web --release
 # Copy the build output into example-app/public/ (the dx 0.6 output path
 # is `target/dx/tars-example/release/web/public`).
@@ -100,13 +100,13 @@ cargo run --bin server
 Frontend (terminal B):
 
 ```bash
-# Needs the Dioxus CLI: `cargo install dioxus-cli`
-cd example-app/frontend
+# Web (needs the Dioxus CLI: `cargo install dioxus-cli`)
+cd example-app/resources
 dx serve --features web
 # Listens on http://localhost:8080 with hot reload.
 
-# Or compile to desktop (needs gtk + webkit2gtk dev libs on Linux)
-cargo run -p example-app-frontend --features desktop
+# Desktop (needs gtk + webkit2gtk dev libs on Linux)
+cargo run -p example-resources --features desktop
 ```
 
 > Open the **frontend** URL (`:8080`), not the backend (`:8000`). The
@@ -153,4 +153,4 @@ cargo test --workspace
 
 ## License
 
-MIT.
+BSD 3-Clause. See [LICENSE](./LICENSE).

@@ -22,14 +22,13 @@ async fn main() -> tars_core::Result<()> {
         .map_err(|e| tars_core::Error::Internal(format!("Migration failed: {e}")))?;
 
     let mut app = Application::new();
-    routes::web::register(&mut app.router);
-    routes::api::register(&mut app.router);
+    routes::register(&mut app.router);
     app.router.apply_global(Arc::new(Cors::permissive()));
 
     // Mount the built Dioxus bundle as the SPA fallback. Anything not
     // matched by an /api route falls through to `public/index.html`, so
     // browsers hitting `:8000` see the frontend instead of a JSON blob.
-    // Build the bundle with: `cd frontend && dx build --features web --release`
+    // Build the bundle with: `cd resources && dx build --features web --release`
     // then copy the output into `public/` (or point this at the CLI output dir).
     let app = app.with_public_dir("public");
 

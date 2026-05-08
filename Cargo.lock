@@ -1686,7 +1686,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "example-app-frontend"
+name = "example-resources"
 version = "1.0.0"
 dependencies = [
  "dioxus",
