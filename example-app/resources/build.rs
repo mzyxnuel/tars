@@ -1,16 +1,17 @@
-//! Build-time route discovery — scans `resources/routes/` like TanStack
-//! Router and emits a `ROUTES` table that the binary `include!`s.
+//! Build-time route discovery — scans `routes/` (relative to this crate's
+//! manifest) like TanStack Router and emits a `routes()` table the binary
+//! `include!`s.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 fn main() {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-    let routes_dir = Path::new(&manifest_dir).join("../resources/routes");
+    let routes_dir = Path::new(&manifest_dir).join("routes");
     let routes_dir = match routes_dir.canonicalize() {
         Ok(p) => p,
         Err(_) => {
-            eprintln!("cargo:warning=resources/routes/ not found — generating empty router");
+            eprintln!("cargo:warning=routes/ not found — generating empty router");
             write_empty(&manifest_dir);
             return;
         }

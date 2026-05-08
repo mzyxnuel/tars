@@ -1,5 +1,5 @@
 [package]
-name = "example-app-frontend"
+name = "example-resources"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -18,5 +18,5 @@ desktop = ["tars-frontend/desktop"]
 mobile = ["tars-frontend/mobile"]
 
 [[bin]]
-name = "frontend"
-path = "src/main.rs"
+name = "example-resources"
+path = "main.rs"

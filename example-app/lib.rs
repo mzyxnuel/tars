@@ -1,16 +1,14 @@
 //! Example TARS application — library crate that exposes the app modules
 //! so the bootstrap binaries can import them. The directory layout mirrors
-//! Laravel 13.
+//! Laravel 13 (snake_case'd for Rust).
 
-#[allow(non_snake_case)]
-#[path = "../app/mod.rs"]
+#[path = "app/mod.rs"]
 pub mod app;
 
-#[path = "../models/mod.rs"]
+#[path = "models/mod.rs"]
 pub mod models;
 
-#[path = "../database/mod.rs"]
+#[path = "database/mod.rs"]
 pub mod database;
 
-#[path = "../routes/mod.rs"]
 pub mod routes;

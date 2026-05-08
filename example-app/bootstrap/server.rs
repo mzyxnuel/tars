@@ -22,8 +22,7 @@ async fn main() -> tars_core::Result<()> {
         .map_err(|e| tars_core::Error::Internal(format!("Migration failed: {e}")))?;
 
     let mut app = Application::new();
-    routes::web::register(&mut app.router);
-    routes::api::register(&mut app.router);
+    routes::register(&mut app.router);
     app.router.apply_global(Arc::new(Cors::permissive()));
 
     app.serve("0.0.0.0:8000").await
