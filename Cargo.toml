@@ -8,21 +8,20 @@ members = [
     "crates/tars-frontend",
     "crates/tars-ui",
     "example-app",
-    "example-app/frontend",
+    "example-app/resources",
 ]
 
 [workspace.package]
 version = "1.0.0"
 edition = "2021"
 authors = ["TARS Framework"]
-license = "MIT"
+license = "BSD-3-Clause"
 repository = "https://github.com/mzyxnuel/tars"
 
 [workspace.dependencies]
 tars-core = { path = "crates/tars-core" }
 tars-orm = { path = "crates/tars-orm" }
 tars-validation = { path = "crates/tars-validation" }
-tars-macros = { path = "crates/tars-macros" }
 tars-cli = { path = "crates/tars-cli" }
 tars-frontend = { path = "crates/tars-frontend" }
 tars-ui = { path = "crates/tars-ui" }
