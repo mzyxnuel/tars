@@ -66,34 +66,68 @@ example-app/resources/ Frontend Cargo crate (Dioxus) that talks JSON to it
 
 ## Running the example app
 
+There are two ways to run the example. Both end up at the same set of
+pages — pick whichever fits your workflow.
+
+### Option 1 — single-port (production-style)
+
+Build the frontend once, then start the backend; it serves the frontend
+bundle at `/` and the JSON API at `/api/*` on the same port.
+
+```bash
+cd example-app/resources
+dx build --features web --release
+# Copy the build output into example-app/public/ (the dx 0.6 output path
+# is `target/dx/tars-example/release/web/public`).
+cp -r target/dx/tars-example/release/web/public/* ../public/
+
+cd ..
+cargo run --bin server
+# Open http://localhost:8000 — the frontend renders, the API is at /api/*.
+```
+
+### Option 2 — split dev servers (hot reload)
+
 Backend (terminal A):
 
 ```bash
 cd example-app
 cargo run --bin server
-# 🚀 listens on 0.0.0.0:8000
-# Migrations are auto-run on boot. SQLite file lives at storage/app/database.sqlite
+# Listens on 0.0.0.0:8000 (JSON API at /api/*).
+# Migrations auto-run. SQLite file at storage/app/database.sqlite.
 ```
 
 Frontend (terminal B):
 
 ```bash
-# Web (needs the dioxus CLI: `cargo install dioxus-cli`)
+# Web (needs the Dioxus CLI: `cargo install dioxus-cli`)
 cd example-app/resources
 dx serve --features web
+# Listens on http://localhost:8080 with hot reload.
 
 # Desktop (needs gtk + webkit2gtk dev libs on Linux)
 cargo run -p example-resources --features desktop
 ```
 
+> Open the **frontend** URL (`:8080`), not the backend (`:8000`). The
+> frontend calls `/api/...` cross-origin against `:8000` — CORS is
+> permissive in dev.
+
 You'll see:
-- `/` — landing page with cards
-- `/users` — list of users with view / edit / delete actions
-- `/users/create` — create form (with field-level validation errors)
+- `/` — Tailwind landing page with feature grid
+- `/users` — list with view / edit / delete actions
+- `/users/create` — form with field-level validation errors
 - `/users/:id` — show page
 - `/users/:id/edit` — edit form
 
-All five pages use `tars-ui` components and talk to the backend over JSON.
+### Styling
+
+The example app uses **Tailwind CSS** (loaded via the Tailwind Play CDN
+from `frontend/src/main.rs` — no npm needed). The bundled `tars-ui`
+component stylesheet is also mounted, so you can mix utility classes
+with `tars-ui` components freely. For a production build, replace the
+CDN script with a tailwindcss-CLI-compiled CSS file referenced from
+`Dioxus.toml`'s `[web.resource]` section.
 
 ## CLI (artisan-like)
 
