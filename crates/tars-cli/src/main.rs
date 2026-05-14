@@ -59,24 +59,23 @@ enum Commands {
 
     // ----- Frontend lifecycle (wraps `dx`) -----------------------------
     /// Start the frontend dev server with hot reload
-    /// (wraps `dx serve --features web` inside `resources/`).
+    /// (wraps `dx serve --web` inside `resources/`).
     Dev {
         /// Override the dev server port (forwarded as `--port`).
         #[arg(long)]
         port: Option<u16>,
-        /// Pick the Dioxus platform feature: `web` (default), `desktop`,
-        /// or `mobile`.
+        /// Target platform passed to dx as `--web` / `--desktop` /
+        /// `--mobile` / `--ios` / `--android`. Defaults to `web`.
         #[arg(long, default_value = "web")]
         platform: String,
     },
-    /// Build the frontend bundle
-    /// (wraps `dx build --features <platform>` inside `resources/`).
+    /// Build the frontend bundle (wraps `dx build --<platform>` inside `resources/`).
     Build {
         /// Add `--release` to the dx build.
         #[arg(long)]
         release: bool,
-        /// Pick the Dioxus platform feature: `web` (default), `desktop`,
-        /// or `mobile`.
+        /// Target platform passed to dx as `--web` / `--desktop` /
+        /// `--mobile` / `--ios` / `--android`. Defaults to `web`.
         #[arg(long, default_value = "web")]
         platform: String,
     },
@@ -162,7 +161,7 @@ fn run_dx(args: &[String]) -> anyhow::Result<()> {
 }
 
 fn run_dx_dev(port: Option<u16>, platform: &str) -> anyhow::Result<()> {
-    let mut args = vec!["serve".to_string(), "--features".to_string(), platform.to_string()];
+    let mut args = vec!["serve".to_string(), platform_flag(platform)?];
     if let Some(p) = port {
         args.push("--port".into());
         args.push(p.to_string());
@@ -171,9 +170,26 @@ fn run_dx_dev(port: Option<u16>, platform: &str) -> anyhow::Result<()> {
 }
 
 fn run_dx_build(release: bool, platform: &str) -> anyhow::Result<()> {
-    let mut args = vec!["build".to_string(), "--features".to_string(), platform.to_string()];
+    let mut args = vec!["build".to_string(), platform_flag(platform)?];
     if release {
         args.push("--release".into());
     }
     run_dx(&args)
+}
+
+/// Translate the `--platform <name>` argument we expose into the bare flag
+/// the Dioxus CLI 0.7 expects. Each flag sets target triple, cargo features,
+/// and build profile all at once — `dx serve --features web` no longer
+/// works in 0.7 (the CLI cannot infer the target triple from it).
+fn platform_flag(name: &str) -> anyhow::Result<String> {
+    Ok(match name {
+        "web" => "--web".into(),
+        "desktop" => "--desktop".into(),
+        "mobile" => "--mobile".into(),
+        "ios" => "--ios".into(),
+        "android" => "--android".into(),
+        other => anyhow::bail!(
+            "unknown --platform `{other}`. Supported: web, desktop, mobile, ios, android."
+        ),
+    })
 }
