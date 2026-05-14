@@ -76,8 +76,8 @@ bundle at `/` and the JSON API at `/api/*` on the same port.
 
 ```bash
 cd example-app/resources
-dx build --features web --release
-# Copy the build output into example-app/public/ (the dx 0.6 output path
+dx build --web --release
+# Copy the build output into example-app/public/ (the dx 0.7 output path
 # is `target/dx/tars-example/release/web/public`).
 cp -r target/dx/tars-example/release/web/public/* ../public/
 
@@ -102,11 +102,11 @@ Frontend (terminal B):
 ```bash
 # Web (needs the Dioxus CLI: `cargo install dioxus-cli`)
 cd example-app/resources
-dx serve --features web
+dx serve --web
 # Listens on http://localhost:8080 with hot reload.
 
 # Desktop (needs gtk + webkit2gtk dev libs on Linux)
-cargo run -p example-resources --features desktop
+dx serve --desktop
 ```
 
 > Open the **frontend** URL (`:8080`), not the backend (`:8000`). The
@@ -150,11 +150,11 @@ tars migrate                    # cargo run --bin migrate
 tars db:seed                    # cargo run --bin seed
 
 # Frontend lifecycle (wraps the Dioxus CLI inside resources/)
-tars dev                        # dx serve --features web (hot reload)
+tars dev                        # dx serve --web (hot reload)
 tars dev --port 3000            # forward --port to dx
-tars dev --platform desktop     # dx serve --features desktop
-tars build                      # dx build --features web
-tars build --release            # dx build --features web --release
+tars dev --platform desktop     # dx serve --desktop
+tars build                      # dx build --web
+tars build --release            # dx build --web --release
 tars dx -- --help               # passthrough — anything dx accepts
 ```
 
