@@ -133,8 +133,79 @@ fn run_cargo_bin(bin: &str, release: bool) -> anyhow::Result<()> {
     std::process::exit(status.code().unwrap_or(0));
 }
 
+/// Pinned to the Dioxus version declared in the workspace `Cargo.toml`. The
+/// dioxus-cli release line tracks the dioxus crate, so the two must match
+/// for `dx serve` to produce a working bundle.
+const DIOXUS_CLI_VERSION: &str = "0.7.9";
+
+/// Locate the `dx` executable on PATH, falling back to the cargo install
+/// bin directory in case the user just installed it and hasn't shimmed
+/// PATH yet (common on fresh boxes).
+fn find_dx() -> Option<std::path::PathBuf> {
+    let exe = if cfg!(windows) { "dx.exe" } else { "dx" };
+    if let Some(paths) = std::env::var_os("PATH") {
+        for dir in std::env::split_paths(&paths) {
+            let p = dir.join(exe);
+            if p.is_file() {
+                return Some(p);
+            }
+        }
+    }
+    if let Some(bin) = cargo_install_bin() {
+        let p = bin.join(exe);
+        if p.is_file() {
+            return Some(p);
+        }
+    }
+    None
+}
+
+fn cargo_install_bin() -> Option<std::path::PathBuf> {
+    if let Some(h) = std::env::var_os("CARGO_HOME") {
+        return Some(std::path::PathBuf::from(h).join("bin"));
+    }
+    let home = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE"))?;
+    Some(std::path::PathBuf::from(home).join(".cargo").join("bin"))
+}
+
+/// Return a usable path to `dx`, installing dioxus-cli on the fly when
+/// missing so `tars dev` / `tars build` work out of the box without an
+/// extra setup step. The install runs once per machine.
+fn ensure_dx() -> anyhow::Result<std::path::PathBuf> {
+    if let Some(p) = find_dx() {
+        return Ok(p);
+    }
+    println!(
+        "→ Dioxus CLI (`dx`) not found. Installing dioxus-cli {DIOXUS_CLI_VERSION} via \
+         `cargo install` — first-time setup can take a few minutes."
+    );
+    let status = std::process::Command::new("cargo")
+        .args([
+            "install",
+            "dioxus-cli",
+            "--version",
+            DIOXUS_CLI_VERSION,
+            "--locked",
+        ])
+        .status()
+        .map_err(|e| anyhow::anyhow!("failed to spawn `cargo install`: {e}"))?;
+    if !status.success() {
+        anyhow::bail!(
+            "`cargo install dioxus-cli --version {DIOXUS_CLI_VERSION} --locked` failed \
+             (exit status: {status}). Re-run manually to see the full error."
+        );
+    }
+    find_dx().ok_or_else(|| {
+        anyhow::anyhow!(
+            "dioxus-cli installed, but `dx` was still not found. Add \
+             `$CARGO_HOME/bin` (or `~/.cargo/bin`) to your PATH and retry."
+        )
+    })
+}
+
 /// Run `dx` from the frontend crate. Defaults to `./resources/` since that's
-/// where `tars new` puts the Dioxus crate. Errors clearly if `dx` is missing.
+/// where `tars new` puts the Dioxus crate. Auto-installs dioxus-cli when
+/// `dx` isn't already on PATH.
 fn run_dx(args: &[String]) -> anyhow::Result<()> {
     let resources = std::path::Path::new("resources");
     if !resources.exists() {
@@ -143,20 +214,12 @@ fn run_dx(args: &[String]) -> anyhow::Result<()> {
              Run `tars dx ...` from your project root."
         );
     }
-    let mut cmd = std::process::Command::new("dx");
+    let dx = ensure_dx()?;
+    let mut cmd = std::process::Command::new(&dx);
     cmd.current_dir(resources).args(args);
     let pretty: Vec<&str> = args.iter().map(String::as_str).collect();
     println!("→ (cd resources && dx {})", pretty.join(" "));
-    let status = match cmd.status() {
-        Ok(s) => s,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            anyhow::bail!(
-                "`dx` binary not found on PATH. Install the Dioxus CLI with \
-                 `cargo install dioxus-cli` and try again."
-            );
-        }
-        Err(e) => return Err(e.into()),
-    };
+    let status = cmd.status()?;
     std::process::exit(status.code().unwrap_or(0));
 }
 

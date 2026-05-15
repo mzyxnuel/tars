@@ -100,13 +100,13 @@ cargo run --bin server
 Frontend (terminal B):
 
 ```bash
-# Web (needs the Dioxus CLI: `cargo install dioxus-cli`)
-cd example-app/resources
-dx serve --web
+# Web — `tars dev` runs `dx serve --web` for you and auto-installs the
+# Dioxus CLI on first run if `dx` isn't already on PATH.
+tars dev
 # Listens on http://localhost:8080 with hot reload.
 
 # Desktop (needs gtk + webkit2gtk dev libs on Linux)
-dx serve --desktop
+tars dev --platform desktop
 ```
 
 > Open the **frontend** URL (`:8080`), not the backend (`:8000`). The
