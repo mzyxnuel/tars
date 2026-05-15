@@ -64,6 +64,22 @@ example-app/resources/ Frontend Cargo crate (Dioxus) that talks JSON to it
   with a single bundled stylesheet (`tars_ui::STYLES`)
 - Reactive validation error map: `use_validation_errors()`
 
+## Installing the `tars` CLI
+
+The CLI lives in `crates/tars-cli`. Install it once from the repo root:
+
+```bash
+cargo install --path crates/tars-cli --locked --force
+```
+
+`cargo install` drops the `tars` binary into `$CARGO_HOME/bin` (default
+`~/.cargo/bin`) — make sure that directory is on your `PATH`. Re-run the
+same command with `--force` to upgrade after pulling new changes.
+
+On first invocation, `tars dev` / `tars build` auto-install the Dioxus
+CLI (`dx`) if it isn't already on `PATH`, so there's no separate setup
+step for the frontend toolchain.
+
 ## Running the example app
 
 There are two ways to run the example. Both end up at the same set of
@@ -75,14 +91,13 @@ Build the frontend once, then start the backend; it serves the frontend
 bundle at `/` and the JSON API at `/api/*` on the same port.
 
 ```bash
-cd example-app/resources
-dx build --web --release
+cd example-app
+tars build --release
 # Copy the build output into example-app/public/ (the dx 0.7 output path
-# is `target/dx/tars-example/release/web/public`).
-cp -r target/dx/tars-example/release/web/public/* ../public/
+# is `resources/target/dx/tars-example/release/web/public`).
+cp -r resources/target/dx/tars-example/release/web/public/* public/
 
-cd ..
-cargo run --bin server
+tars serve --release
 # Open http://localhost:8000 — the frontend renders, the API is at /api/*.
 ```
 
@@ -92,7 +107,7 @@ Backend (terminal A):
 
 ```bash
 cd example-app
-cargo run --bin server
+tars serve
 # Listens on 0.0.0.0:8000 (JSON API at /api/*).
 # Migrations auto-run. SQLite file at storage/app/database.sqlite.
 ```
@@ -100,8 +115,8 @@ cargo run --bin server
 Frontend (terminal B):
 
 ```bash
-# Web — `tars dev` runs `dx serve --web` for you and auto-installs the
-# Dioxus CLI on first run if `dx` isn't already on PATH.
+# Web — `tars dev` runs the Dioxus dev server for you and auto-installs
+# the Dioxus CLI on first run if `dx` isn't already on PATH.
 tars dev
 # Listens on http://localhost:8080 with hot reload.
 
@@ -143,18 +158,18 @@ tars make:factory PostFactory
 tars make:request StorePostRequest
 tars make:resource PostResource
 
-# Backend lifecycle (wraps cargo)
-tars serve                      # cargo run --bin server
-tars serve --release            # cargo run --release --bin server
-tars migrate                    # cargo run --bin migrate
-tars db:seed                    # cargo run --bin seed
+# Backend lifecycle
+tars serve                      # start the HTTP server (debug)
+tars serve --release            # …with release optimisations
+tars migrate                    # run pending database migrations
+tars db:seed                    # run database seeders
 
-# Frontend lifecycle (wraps the Dioxus CLI inside resources/)
-tars dev                        # dx serve --web (hot reload)
-tars dev --port 3000            # forward --port to dx
-tars dev --platform desktop     # dx serve --desktop
-tars build                      # dx build --web
-tars build --release            # dx build --web --release
+# Frontend lifecycle (auto-installs the Dioxus CLI on first run)
+tars dev                        # hot-reloading dev server (web by default)
+tars dev --port 3000            # custom port
+tars dev --platform desktop     # target desktop instead of web
+tars build                      # production frontend build (web)
+tars build --release            # …with release optimisations
 tars dx -- --help               # passthrough — anything dx accepts
 ```
 
