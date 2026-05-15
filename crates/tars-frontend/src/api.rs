@@ -62,7 +62,7 @@ impl Api {
     ) -> Result<T, String> {
         #[cfg(target_arch = "wasm32")]
         {
-            use gloo_net::http::{Method, Request};
+            use gloo_net::http::{Method, RequestBuilder};
             let url = self.url(path);
             let m = match method {
                 "GET" => Method::GET,
@@ -72,7 +72,7 @@ impl Api {
                 "DELETE" => Method::DELETE,
                 _ => Method::GET,
             };
-            let mut builder = Request::new(&url).method(m);
+            let mut builder = RequestBuilder::new(&url).method(m);
             let resp = if let Some(b) = body {
                 builder = builder.header("Content-Type", "application/json");
                 let json = serde_json::to_string(b).map_err(|e| e.to_string())?;
