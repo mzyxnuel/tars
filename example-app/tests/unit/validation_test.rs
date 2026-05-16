@@ -1,5 +1,5 @@
 use serde_json::json;
-use tars_validation::Validator;
+use tars_core::Validator;
 
 #[test]
 fn min_rule_errors_for_short_strings() {

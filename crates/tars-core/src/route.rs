@@ -138,47 +138,77 @@ impl Router {
         self.add(Method::DELETE, path, h)
     }
 
-    /// Register the 7 standard Laravel resource routes for a controller-like
-    /// object. All resource actions receive the `Request` via trait dispatch.
-    pub fn resource<C: crate::controller::Controller + Clone>(&mut self, path: &str, controller: C) {
+    /// Register the standard Laravel resource routes for a typed
+    /// `Controller`. The router wires up route-model binding (`:id` →
+    /// `Self::Model`) and form-request extraction automatically, so the
+    /// controller methods only see the typed inputs they declare.
+    pub fn resource<C: crate::controller::Controller>(&mut self, path: &str, controller: C) {
+        use crate::binding::{Bindable, RouteBindable};
+        use crate::error::Error;
         let base = path.trim_end_matches('/').to_string();
+
+        // GET /resource → index
         let c = controller.clone();
-        self.get(&base, move |r| {
+        self.get(&base, move |_req| {
             let c = c.clone();
-            async move { c.index(r).await }
+            async move { c.index().await }
         });
 
+        // POST /resource → store (with FormRequest extraction)
         let c = controller.clone();
-        self.post(&base, move |r| {
+        self.post(&base, move |req| {
             let c = c.clone();
-            async move { c.store(r).await }
+            async move {
+                let form = <C::StoreRequest as Bindable>::from_request(&req).await?;
+                c.store(form).await
+            }
         });
 
+        // GET /resource/:id → show (with route-model binding)
         let c = controller.clone();
         let show = format!("{}/:id", base);
-        self.get(&show, move |r| {
+        self.get(&show, move |req| {
             let c = c.clone();
-            async move { c.show(r).await }
+            async move {
+                let id = req.route("id").ok_or(Error::NotFound)?.to_string();
+                let model = <C::Model as RouteBindable>::require_bind(&id).await?;
+                c.show(model).await
+            }
         });
 
+        // PUT/PATCH /resource/:id → update (binding + FormRequest)
         let c = controller.clone();
-        let upd = format!("{}/:id", base);
-        self.put(&upd, move |r| {
+        let update_path = format!("{}/:id", base);
+        self.put(&update_path, move |req| {
             let c = c.clone();
-            async move { c.update(r).await }
+            async move {
+                let id = req.route("id").ok_or(Error::NotFound)?.to_string();
+                let model = <C::Model as RouteBindable>::require_bind(&id).await?;
+                let form = <C::UpdateRequest as Bindable>::from_request(&req).await?;
+                c.update(model, form).await
+            }
         });
-
         let c = controller.clone();
-        let patch = format!("{}/:id", base);
-        self.patch(&patch, move |r| {
+        let patch_path = format!("{}/:id", base);
+        self.patch(&patch_path, move |req| {
             let c = c.clone();
-            async move { c.update(r).await }
+            async move {
+                let id = req.route("id").ok_or(Error::NotFound)?.to_string();
+                let model = <C::Model as RouteBindable>::require_bind(&id).await?;
+                let form = <C::UpdateRequest as Bindable>::from_request(&req).await?;
+                c.update(model, form).await
+            }
         });
 
-        let del = format!("{}/:id", base);
-        self.delete(&del, move |r| {
+        // DELETE /resource/:id → destroy
+        let destroy_path = format!("{}/:id", base);
+        self.delete(&destroy_path, move |req| {
             let c = controller.clone();
-            async move { c.destroy(r).await }
+            async move {
+                let id = req.route("id").ok_or(Error::NotFound)?.to_string();
+                let model = <C::Model as RouteBindable>::require_bind(&id).await?;
+                c.destroy(model).await
+            }
         });
     }
 

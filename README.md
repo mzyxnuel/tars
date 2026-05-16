@@ -133,6 +133,8 @@ CDN script with a tailwindcss-CLI-compiled CSS file referenced from
 
 ```bash
 tars new my-app                 # scaffold a project
+
+# Generators
 tars make:controller PostController
 tars make:model Post
 tars make:migration create_posts_table
@@ -140,9 +142,20 @@ tars make:seeder PostSeeder
 tars make:factory PostFactory
 tars make:request StorePostRequest
 tars make:resource PostResource
+
+# Backend lifecycle (wraps cargo)
 tars serve                      # cargo run --bin server
+tars serve --release            # cargo run --release --bin server
 tars migrate                    # cargo run --bin migrate
 tars db:seed                    # cargo run --bin seed
+
+# Frontend lifecycle (wraps the Dioxus CLI inside resources/)
+tars dev                        # dx serve --features web (hot reload)
+tars dev --port 3000            # forward --port to dx
+tars dev --platform desktop     # dx serve --features desktop
+tars build                      # dx build --features web
+tars build --release            # dx build --features web --release
+tars dx -- --help               # passthrough — anything dx accepts
 ```
 
 ## Tests

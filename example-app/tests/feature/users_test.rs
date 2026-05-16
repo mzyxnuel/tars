@@ -3,7 +3,7 @@
 //! dependency-free.
 
 use serde_json::json;
-use tars_validation::Validator;
+use tars_core::Validator;
 
 #[test]
 fn store_user_request_rules_reject_missing_email() {

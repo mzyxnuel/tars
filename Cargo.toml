@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "crates/tars-core",
     "crates/tars-orm",
-    "crates/tars-validation",
     "crates/tars-cli",
     "crates/tars-frontend",
     "crates/tars-ui",
@@ -12,7 +11,7 @@ members = [
 ]
 
 [workspace.package]
-version = "1.0.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["TARS Framework"]
 license = "BSD-3-Clause"
@@ -21,7 +20,6 @@ repository = "https://github.com/mzyxnuel/tars"
 [workspace.dependencies]
 tars-core = { path = "crates/tars-core" }
 tars-orm = { path = "crates/tars-orm" }
-tars-validation = { path = "crates/tars-validation" }
 tars-cli = { path = "crates/tars-cli" }
 tars-frontend = { path = "crates/tars-frontend" }
 tars-ui = { path = "crates/tars-ui" }

@@ -24,13 +24,14 @@ pub struct {name};
 
 #[async_trait]
 impl Controller for {name} {{
-    async fn index(&self, _req: Request) -> Result<Response> {{
-        Ok(Response::json(json!({{ "data": [] }})))
-    }}
+    // Set these to the right concrete types for your resource — e.g.
+    // `type Model = Post;` and a `StoreRequest`/`UpdateRequest` impl.
+    type Model = NoModel;
+    type StoreRequest = ();
+    type UpdateRequest = ();
 
-    async fn show(&self, req: Request) -> Result<Response> {{
-        let id = req.route("id").unwrap_or_default();
-        Ok(Response::json(json!({{ "id": id }})))
+    async fn index(&self) -> Result<Response> {{
+        Ok(Response::json(json!({{ "data": [] }})))
     }}
 }}
 "#
@@ -137,12 +138,14 @@ impl Factory for {name} {{
 pub fn make_request(name: &str) -> Result<()> {
     let path = format!("app/http/requests/{}.rs", to_snake(name));
     let src = format!(
-        r#"use tars_validation::FormRequest;
-use async_trait::async_trait;
+        r#"use serde::{{Deserialize, Serialize}};
+use tars_core::FormRequest;
 
-pub struct {name};
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {name} {{
+    // TODO: add fields matching your rules
+}}
 
-#[async_trait]
 impl FormRequest for {name} {{
     fn rules() -> Vec<(&'static str, &'static str)> {{
         vec![
@@ -159,12 +162,12 @@ pub fn make_resource(name: &str) -> Result<()> {
     let path = format!("app/http/resources/{}.rs", to_snake(name));
     let src = format!(
         r#"use serde_json::{{json, Value}};
-use tars_orm::JsonResource;
+use tars_core::JsonResource;
 
 pub struct {name}<M> {{ pub model: M }}
 
-impl<M> JsonResource for {name}<M> {{
-    type M = M;
+impl<M: Send + Sync + 'static> JsonResource for {name}<M> {{
+    type Model = M;
     fn from_model(model: M) -> Self {{ Self {{ model }} }}
     fn to_json(&self) -> Value {{ json!({{}}) }}
 }}

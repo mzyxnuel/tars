@@ -1,11 +1,15 @@
-use async_trait::async_trait;
-use tars_validation::FormRequest;
+use serde::{Deserialize, Serialize};
+use tars_core::FormRequest;
 
-/// Form request for `POST /users`. Declares the same rule syntax as Laravel
-/// — `required|email|max:255` etc.
-pub struct StoreUserRequest;
+/// Form request for `POST /users`. Fields hold the validated payload —
+/// access them directly (`req.name`) or call `req.validated()` for the
+/// raw JSON shape ready to pass to `Model::create`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StoreUserRequest {
+    pub name: String,
+    pub email: String,
+}
 
-#[async_trait]
 impl FormRequest for StoreUserRequest {
     fn rules() -> Vec<(&'static str, &'static str)> {
         vec![
