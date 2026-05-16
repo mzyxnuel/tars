@@ -1,6 +1,6 @@
 use serde_json::{Map, Value};
 
-use crate::rule::{parse_rules, Rule};
+use crate::validation::rule::{parse_rules, Rule};
 
 /// Runs a rule set against a data payload. Returns either the validated
 /// data or a map of field → error messages — formatted exactly like
